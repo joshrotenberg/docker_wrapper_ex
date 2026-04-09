@@ -75,8 +75,7 @@ defmodule Docker do
   def run(cmd_or_image, opts \\ [])
 
   def run(%Commands.Run{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Run, cmd, config)
+    dispatch(Commands.Run, cmd, opts)
   end
 
   def run(image, opts) when is_binary(image) do
@@ -91,8 +90,7 @@ defmodule Docker do
   def create(cmd_or_image, opts \\ [])
 
   def create(%Commands.Create{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Create, cmd, config)
+    dispatch(Commands.Create, cmd, opts)
   end
 
   def create(image, opts) when is_binary(image) do
@@ -106,8 +104,7 @@ defmodule Docker do
   def start(cmd_or_container, opts \\ [])
 
   def start(%Commands.Start{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Start, cmd, config)
+    dispatch(Commands.Start, cmd, opts)
   end
 
   def start(container, opts) when is_binary(container) do
@@ -121,8 +118,7 @@ defmodule Docker do
   def stop(cmd_or_container, opts \\ [])
 
   def stop(%Commands.Stop{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Stop, cmd, config)
+    dispatch(Commands.Stop, cmd, opts)
   end
 
   def stop(container, opts) when is_binary(container) do
@@ -136,8 +132,7 @@ defmodule Docker do
   def kill(cmd_or_container, opts \\ [])
 
   def kill(%Commands.Kill{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Kill, cmd, config)
+    dispatch(Commands.Kill, cmd, opts)
   end
 
   def kill(container, opts) when is_binary(container) do
@@ -151,8 +146,7 @@ defmodule Docker do
   def rm(cmd_or_container, opts \\ [])
 
   def rm(%Commands.Rm{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Rm, cmd, config)
+    dispatch(Commands.Rm, cmd, opts)
   end
 
   def rm(container, opts) when is_binary(container) do
@@ -167,8 +161,7 @@ defmodule Docker do
   def restart(cmd_or_container, opts \\ [])
 
   def restart(%Commands.Restart{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Restart, cmd, config)
+    dispatch(Commands.Restart, cmd, opts)
   end
 
   def restart(container, opts) when is_binary(container) do
@@ -182,8 +175,7 @@ defmodule Docker do
   def pause(cmd_or_container, opts \\ [])
 
   def pause(%Commands.Pause{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Pause, cmd, config)
+    dispatch(Commands.Pause, cmd, opts)
   end
 
   def pause(container, opts) when is_binary(container) do
@@ -198,8 +190,7 @@ defmodule Docker do
   def unpause(cmd_or_container, opts \\ [])
 
   def unpause(%Commands.Unpause{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Unpause, cmd, config)
+    dispatch(Commands.Unpause, cmd, opts)
   end
 
   def unpause(container, opts) when is_binary(container) do
@@ -221,13 +212,13 @@ defmodule Docker do
   def ps(cmd_or_opts \\ [])
 
   def ps(%Commands.Ps{} = cmd) do
-    Command.run(Commands.Ps, cmd, Config.new())
+    dispatch(Commands.Ps, cmd, [])
   end
 
   def ps(opts) when is_list(opts) do
-    {config, rest} = extract_config(opts)
+    {_config, rest} = extract_config(opts)
     cmd = %Commands.Ps{all: Keyword.get(rest, :all, false)}
-    Command.run(Commands.Ps, cmd, config)
+    dispatch(Commands.Ps, cmd, opts)
   end
 
   @doc """
@@ -237,8 +228,7 @@ defmodule Docker do
   def logs(cmd_or_container, opts \\ [])
 
   def logs(%Commands.Logs{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Logs, cmd, config)
+    dispatch(Commands.Logs, cmd, opts)
   end
 
   def logs(container, opts) when is_binary(container) do
@@ -255,8 +245,7 @@ defmodule Docker do
   def inspect_cmd(cmd_or_target, opts \\ [])
 
   def inspect_cmd(%Commands.Inspect{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Inspect, cmd, config)
+    dispatch(Commands.Inspect, cmd, opts)
   end
 
   def inspect_cmd(target, opts) when is_binary(target) do
@@ -268,8 +257,7 @@ defmodule Docker do
   """
   @spec exec_cmd(Commands.Exec.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def exec_cmd(%Commands.Exec{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Exec, cmd, config)
+    dispatch(Commands.Exec, cmd, opts)
   end
 
   # -- Images --
@@ -287,13 +275,13 @@ defmodule Docker do
   def images(cmd_or_opts \\ [])
 
   def images(%Commands.Images{} = cmd) do
-    Command.run(Commands.Images, cmd, Config.new())
+    dispatch(Commands.Images, cmd, [])
   end
 
   def images(opts) when is_list(opts) do
-    {config, rest} = extract_config(opts)
+    {_config, rest} = extract_config(opts)
     cmd = %Commands.Images{all: Keyword.get(rest, :all, false)}
-    Command.run(Commands.Images, cmd, config)
+    dispatch(Commands.Images, cmd, opts)
   end
 
   @doc """
@@ -303,8 +291,7 @@ defmodule Docker do
   def pull(cmd_or_image, opts \\ [])
 
   def pull(%Commands.Pull{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Pull, cmd, config)
+    dispatch(Commands.Pull, cmd, opts)
   end
 
   def pull(image, opts) when is_binary(image) do
@@ -318,8 +305,7 @@ defmodule Docker do
   def push(cmd_or_image, opts \\ [])
 
   def push(%Commands.Push{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Push, cmd, config)
+    dispatch(Commands.Push, cmd, opts)
   end
 
   def push(image, opts) when is_binary(image) do
@@ -334,8 +320,7 @@ defmodule Docker do
   def build(cmd_or_context, opts \\ [])
 
   def build(%Commands.Build{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Build, cmd, config)
+    dispatch(Commands.Build, cmd, opts)
   end
 
   def build(context, opts) when is_binary(context) do
@@ -347,8 +332,7 @@ defmodule Docker do
   """
   @spec tag(String.t(), String.t(), keyword()) :: {:ok, :done} | {:error, term()}
   def tag(source, target, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Tag, Commands.Tag.new(source, target), config)
+    dispatch(Commands.Tag, Commands.Tag.new(source, target), opts)
   end
 
   @doc """
@@ -358,8 +342,7 @@ defmodule Docker do
   def rmi(cmd_or_image, opts \\ [])
 
   def rmi(%Commands.Rmi{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Rmi, cmd, config)
+    dispatch(Commands.Rmi, cmd, opts)
   end
 
   def rmi(image, opts) when is_binary(image) do
@@ -371,8 +354,7 @@ defmodule Docker do
   """
   @spec save(Commands.Save.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def save(%Commands.Save{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Save, cmd, config)
+    dispatch(Commands.Save, cmd, opts)
   end
 
   @doc """
@@ -380,8 +362,7 @@ defmodule Docker do
   """
   @spec load(Commands.Load.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def load(%Commands.Load{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Load, cmd, config)
+    dispatch(Commands.Load, cmd, opts)
   end
 
   @doc """
@@ -389,8 +370,7 @@ defmodule Docker do
   """
   @spec import_image(Commands.Import.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def import_image(%Commands.Import{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Import, cmd, config)
+    dispatch(Commands.Import, cmd, opts)
   end
 
   @doc """
@@ -401,8 +381,7 @@ defmodule Docker do
   def history(cmd_or_image, opts \\ [])
 
   def history(%Commands.History{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.History, cmd, config)
+    dispatch(Commands.History, cmd, opts)
   end
 
   def history(image, opts) when is_binary(image) do
@@ -417,8 +396,7 @@ defmodule Docker do
   def search(cmd_or_term, opts \\ [])
 
   def search(%Commands.Search{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Search, cmd, config)
+    dispatch(Commands.Search, cmd, opts)
   end
 
   def search(term, opts) when is_binary(term) do
@@ -435,8 +413,7 @@ defmodule Docker do
   def network_create(cmd_or_name, opts \\ [])
 
   def network_create(%Commands.Network.Create{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Create, cmd, config)
+    dispatch(Commands.Network.Create, cmd, opts)
   end
 
   def network_create(name, opts) when is_binary(name) do
@@ -451,8 +428,7 @@ defmodule Docker do
   def network_rm(cmd_or_name, opts \\ [])
 
   def network_rm(%Commands.Network.Rm{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Rm, cmd, config)
+    dispatch(Commands.Network.Rm, cmd, opts)
   end
 
   def network_rm(name, opts) when is_binary(name) do
@@ -466,12 +442,11 @@ defmodule Docker do
   def network_ls(cmd_or_opts \\ [])
 
   def network_ls(%Commands.Network.Ls{} = cmd) do
-    Command.run(Commands.Network.Ls, cmd, Config.new())
+    dispatch(Commands.Network.Ls, cmd, [])
   end
 
   def network_ls(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Ls, Commands.Network.Ls.new(), config)
+    dispatch(Commands.Network.Ls, Commands.Network.Ls.new(), opts)
   end
 
   @doc """
@@ -482,8 +457,7 @@ defmodule Docker do
   def network_inspect(cmd_or_name, opts \\ [])
 
   def network_inspect(%Commands.Network.Inspect{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Inspect, cmd, config)
+    dispatch(Commands.Network.Inspect, cmd, opts)
   end
 
   def network_inspect(name, opts) when is_binary(name) do
@@ -496,8 +470,7 @@ defmodule Docker do
   @spec network_connect(Commands.Network.Connect.t(), keyword()) ::
           {:ok, :done} | {:error, term()}
   def network_connect(%Commands.Network.Connect{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Connect, cmd, config)
+    dispatch(Commands.Network.Connect, cmd, opts)
   end
 
   @doc """
@@ -506,8 +479,7 @@ defmodule Docker do
   @spec network_disconnect(Commands.Network.Disconnect.t(), keyword()) ::
           {:ok, :done} | {:error, term()}
   def network_disconnect(%Commands.Network.Disconnect{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Disconnect, cmd, config)
+    dispatch(Commands.Network.Disconnect, cmd, opts)
   end
 
   @doc """
@@ -518,12 +490,11 @@ defmodule Docker do
   def network_prune(cmd_or_opts \\ [])
 
   def network_prune(%Commands.Network.Prune{} = cmd) do
-    Command.run(Commands.Network.Prune, cmd, Config.new())
+    dispatch(Commands.Network.Prune, cmd, [])
   end
 
   def network_prune(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Network.Prune, Commands.Network.Prune.new(), config)
+    dispatch(Commands.Network.Prune, Commands.Network.Prune.new(), opts)
   end
 
   # -- Volumes --
@@ -536,8 +507,7 @@ defmodule Docker do
   def volume_create(cmd_or_name \\ %Commands.Volume.Create{}, opts \\ [])
 
   def volume_create(%Commands.Volume.Create{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Volume.Create, cmd, config)
+    dispatch(Commands.Volume.Create, cmd, opts)
   end
 
   def volume_create(name, opts) when is_binary(name) do
@@ -552,8 +522,7 @@ defmodule Docker do
   def volume_rm(cmd_or_name, opts \\ [])
 
   def volume_rm(%Commands.Volume.Rm{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Volume.Rm, cmd, config)
+    dispatch(Commands.Volume.Rm, cmd, opts)
   end
 
   def volume_rm(name, opts) when is_binary(name) do
@@ -567,12 +536,11 @@ defmodule Docker do
   def volume_ls(cmd_or_opts \\ [])
 
   def volume_ls(%Commands.Volume.Ls{} = cmd) do
-    Command.run(Commands.Volume.Ls, cmd, Config.new())
+    dispatch(Commands.Volume.Ls, cmd, [])
   end
 
   def volume_ls(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Volume.Ls, Commands.Volume.Ls.new(), config)
+    dispatch(Commands.Volume.Ls, Commands.Volume.Ls.new(), opts)
   end
 
   @doc """
@@ -583,8 +551,7 @@ defmodule Docker do
   def volume_inspect(cmd_or_name, opts \\ [])
 
   def volume_inspect(%Commands.Volume.Inspect{} = cmd, opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Volume.Inspect, cmd, config)
+    dispatch(Commands.Volume.Inspect, cmd, opts)
   end
 
   def volume_inspect(name, opts) when is_binary(name) do
@@ -599,12 +566,11 @@ defmodule Docker do
   def volume_prune(cmd_or_opts \\ [])
 
   def volume_prune(%Commands.Volume.Prune{} = cmd) do
-    Command.run(Commands.Volume.Prune, cmd, Config.new())
+    dispatch(Commands.Volume.Prune, cmd, [])
   end
 
   def volume_prune(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Volume.Prune, Commands.Volume.Prune.new(), config)
+    dispatch(Commands.Volume.Prune, Commands.Volume.Prune.new(), opts)
   end
 
   # -- Prune --
@@ -617,12 +583,11 @@ defmodule Docker do
   def container_prune(cmd_or_opts \\ [])
 
   def container_prune(%Commands.ContainerPrune{} = cmd) do
-    Command.run(Commands.ContainerPrune, cmd, Config.new())
+    dispatch(Commands.ContainerPrune, cmd, [])
   end
 
   def container_prune(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.ContainerPrune, Commands.ContainerPrune.new(), config)
+    dispatch(Commands.ContainerPrune, Commands.ContainerPrune.new(), opts)
   end
 
   @doc """
@@ -633,12 +598,11 @@ defmodule Docker do
   def image_prune(cmd_or_opts \\ [])
 
   def image_prune(%Commands.ImagePrune{} = cmd) do
-    Command.run(Commands.ImagePrune, cmd, Config.new())
+    dispatch(Commands.ImagePrune, cmd, [])
   end
 
   def image_prune(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.ImagePrune, Commands.ImagePrune.new(), config)
+    dispatch(Commands.ImagePrune, Commands.ImagePrune.new(), opts)
   end
 
   # -- Compose --
@@ -646,61 +610,53 @@ defmodule Docker do
   @doc "Runs `docker compose up`."
   @spec compose_up(Commands.Compose.Up.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def compose_up(%Commands.Compose.Up{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Up, cmd, config)
+    dispatch(Commands.Compose.Up, cmd, opts)
   end
 
   @doc "Runs `docker compose down`."
   @spec compose_down(Commands.Compose.Down.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def compose_down(%Commands.Compose.Down{} = cmd \\ %Commands.Compose.Down{}, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Down, cmd, config)
+    dispatch(Commands.Compose.Down, cmd, opts)
   end
 
   @doc "Runs `docker compose ps`."
   @spec compose_ps(Commands.Compose.Ps.t(), keyword()) :: {:ok, [map()]} | {:error, term()}
   def compose_ps(%Commands.Compose.Ps{} = cmd \\ %Commands.Compose.Ps{}, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Ps, cmd, config)
+    dispatch(Commands.Compose.Ps, cmd, opts)
   end
 
   @doc "Runs `docker compose logs`."
   @spec compose_logs(Commands.Compose.Logs.t(), keyword()) ::
           {:ok, String.t()} | {:error, term()}
   def compose_logs(%Commands.Compose.Logs{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Logs, cmd, config)
+    dispatch(Commands.Compose.Logs, cmd, opts)
   end
 
   @doc "Runs `docker compose exec`."
   @spec compose_exec(Commands.Compose.Exec.t(), keyword()) ::
           {:ok, String.t()} | {:error, term()}
   def compose_exec(%Commands.Compose.Exec{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Exec, cmd, config)
+    dispatch(Commands.Compose.Exec, cmd, opts)
   end
 
   @doc "Runs `docker compose run`."
   @spec compose_run(Commands.Compose.Run.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def compose_run(%Commands.Compose.Run{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Run, cmd, config)
+    dispatch(Commands.Compose.Run, cmd, opts)
   end
 
   @doc "Runs `docker compose build`."
   @spec compose_build(Commands.Compose.Build.t(), keyword()) ::
           {:ok, String.t()} | {:error, term()}
   def compose_build(%Commands.Compose.Build{} = cmd \\ %Commands.Compose.Build{}, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Build, cmd, config)
+    dispatch(Commands.Compose.Build, cmd, opts)
   end
 
   @doc "Runs `docker compose config`."
   @spec compose_config(Commands.Compose.Config.t(), keyword()) ::
           {:ok, String.t()} | {:error, term()}
   def compose_config(%Commands.Compose.Config{} = cmd \\ %Commands.Compose.Config{}, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Compose.Config, cmd, config)
+    dispatch(Commands.Compose.Config, cmd, opts)
   end
 
   # -- System --
@@ -708,17 +664,15 @@ defmodule Docker do
   @doc "Runs `docker version`."
   @spec version(keyword()) :: {:ok, term()} | {:error, term()}
   def version(opts \\ []) do
-    {config, _rest} = extract_config(opts)
     alias Commands.System.Version, as: Ver
-    Command.run(Ver, Ver.new() |> Ver.json(), config)
+    dispatch(Ver, Ver.new() |> Ver.json(), opts)
   end
 
   @doc "Runs `docker info`."
   @spec info(keyword()) :: {:ok, term()} | {:error, term()}
   def info(opts \\ []) do
-    {config, _rest} = extract_config(opts)
     alias Commands.System.Info, as: SysInfo
-    Command.run(SysInfo, SysInfo.new() |> SysInfo.json(), config)
+    dispatch(SysInfo, SysInfo.new() |> SysInfo.json(), opts)
   end
 
   @doc "Runs `docker system df`."
@@ -726,13 +680,12 @@ defmodule Docker do
   def system_df(cmd_or_opts \\ [])
 
   def system_df(%Commands.System.Df{} = cmd) do
-    Command.run(Commands.System.Df, cmd, Config.new())
+    dispatch(Commands.System.Df, cmd, [])
   end
 
   def system_df(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
     alias Commands.System.Df, as: SysDf
-    Command.run(SysDf, SysDf.new(), config)
+    dispatch(SysDf, SysDf.new(), opts)
   end
 
   @doc "Runs `docker system prune`."
@@ -741,12 +694,11 @@ defmodule Docker do
   def system_prune(cmd_or_opts \\ [])
 
   def system_prune(%Commands.System.Prune{} = cmd) do
-    Command.run(Commands.System.Prune, cmd, Config.new())
+    dispatch(Commands.System.Prune, cmd, [])
   end
 
   def system_prune(opts) when is_list(opts) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.System.Prune, Commands.System.Prune.new(), config)
+    dispatch(Commands.System.Prune, Commands.System.Prune.new(), opts)
   end
 
   # -- Generic --
@@ -761,8 +713,7 @@ defmodule Docker do
   """
   @spec generic(Commands.Generic.t(), keyword()) :: {:ok, String.t()} | {:error, term()}
   def generic(%Commands.Generic{} = cmd, opts \\ []) do
-    {config, _rest} = extract_config(opts)
-    Command.run(Commands.Generic, cmd, config)
+    dispatch(Commands.Generic, cmd, opts)
   end
 
   # -- Helpers --
@@ -774,16 +725,19 @@ defmodule Docker do
     {config, rest}
   end
 
-  @doc false
-  def run_command(mod, command, opts) do
+  defp dispatch(mod, command, opts) do
     {config, rest} = extract_config(opts)
-    {debug, _rest} = Keyword.pop(rest, :debug)
+    {debug, rest} = Keyword.pop(rest, :debug)
+    run_opts = Keyword.take(rest, [:stream])
 
     if debug do
       alias Docker.Debug.Executor
       Executor.run(mod, command, config, debug)
     else
-      Command.run(mod, command, config)
+      Command.run(mod, command, config, run_opts)
     end
   end
+
+  @doc false
+  def run_command(mod, command, opts), do: dispatch(mod, command, opts)
 end
