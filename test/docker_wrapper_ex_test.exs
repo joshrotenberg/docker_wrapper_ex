@@ -1,7 +1,8 @@
 defmodule DockerTest do
   use ExUnit.Case
 
-  alias Docker.Config
+  alias Docker.{Commands, Config}
+  alias Docker.Debug
 
   describe "Config" do
     test "new/0 creates config with auto-detected binary" do
@@ -36,6 +37,18 @@ defmodule DockerTest do
     test "cmd_opts/1 includes env when set" do
       opts = Config.cmd_opts(Config.new(env: [{"FOO", "bar"}]))
       assert Keyword.get(opts, :env) == [{"FOO", "bar"}]
+    end
+  end
+
+  describe "extract_config (via dry_run)" do
+    test "binary override merges into config" do
+      cmd = Commands.Ps.new()
+      debug = Debug.Config.new(dry_run: true)
+
+      {:ok, cmd_string} =
+        Docker.run_command(Commands.Ps, cmd, binary: "/custom/docker", debug: debug)
+
+      assert cmd_string =~ "/custom/docker"
     end
   end
 end

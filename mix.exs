@@ -182,6 +182,11 @@ defmodule DockerWrapper.MixProject do
           Docker.Supervised,
           Docker.Stream
         ],
+        Debug: [
+          Docker.Debug.Config,
+          Docker.Debug.Retry,
+          Docker.Debug.Executor
+        ],
         Internals: [
           Docker.Commands.Generic,
           Docker.Commands.Init,

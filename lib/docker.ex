@@ -769,6 +769,21 @@ defmodule Docker do
 
   defp extract_config(opts) do
     {config, rest} = Keyword.pop(opts, :config, Config.new())
+    {binary, rest} = Keyword.pop(rest, :binary)
+    config = if binary, do: %{config | binary: binary}, else: config
     {config, rest}
+  end
+
+  @doc false
+  def run_command(mod, command, opts) do
+    {config, rest} = extract_config(opts)
+    {debug, _rest} = Keyword.pop(rest, :debug)
+
+    if debug do
+      alias Docker.Debug.Executor
+      Executor.run(mod, command, config, debug)
+    else
+      Command.run(mod, command, config)
+    end
   end
 end
