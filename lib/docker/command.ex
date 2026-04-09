@@ -26,6 +26,12 @@ defmodule Docker.Command do
   struct, and a `Docker.Config`. Builds the full argument list, executes
   Docker via `System.cmd/3`, and delegates parsing to the command module.
 
+  ## Options
+
+    * `:stream` - a function that receives each line of output as it's
+      produced. When set, uses a Port for execution instead of `System.cmd`.
+      The final result is still returned after the command completes.
+
   Emits `:telemetry` events for observability:
 
     * `[:docker_wrapper, :command, :start]` -- before execution
@@ -33,10 +39,10 @@ defmodule Docker.Command do
 
   If the command exceeds the configured timeout, returns `{:error, :timeout}`.
   """
-  @spec run(module(), struct(), Config.t()) :: {:ok, term()} | {:error, term()}
-  def run(mod, command, %Config{} = config) do
+  @spec run(module(), struct(), Config.t(), keyword()) :: {:ok, term()} | {:error, term()}
+  def run(mod, command, %Config{} = config, run_opts \\ []) do
     args = Config.base_args(config) ++ mod.args(command)
-    opts = Config.cmd_opts(config)
+    stream_fn = Keyword.get(run_opts, :stream)
 
     :telemetry.execute(
       [:docker_wrapper, :command, :start],
@@ -44,13 +50,15 @@ defmodule Docker.Command do
       %{command: mod, args: args}
     )
 
-    task =
-      Task.async(fn ->
-        System.cmd(config.binary, args, opts)
-      end)
+    result =
+      if stream_fn do
+        run_with_port(config, args, stream_fn, config.timeout)
+      else
+        run_with_cmd(config, args)
+      end
 
-    case Task.yield(task, config.timeout) || Task.shutdown(task) do
-      {:ok, {stdout, exit_code}} ->
+    case result do
+      {:ok, stdout, exit_code} ->
         :telemetry.execute(
           [:docker_wrapper, :command, :stop],
           %{system_time: System.system_time()},
@@ -59,10 +67,61 @@ defmodule Docker.Command do
 
         mod.parse_output(stdout, exit_code)
 
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp run_with_cmd(config, args) do
+    opts = Config.cmd_opts(config)
+
+    task =
+      Task.async(fn ->
+        System.cmd(config.binary, args, opts)
+      end)
+
+    case Task.yield(task, config.timeout) || Task.shutdown(task) do
+      {:ok, {stdout, exit_code}} ->
+        {:ok, stdout, exit_code}
+
       nil ->
         {:error, :timeout}
     end
   end
+
+  defp run_with_port(config, args, stream_fn, timeout) do
+    port =
+      Port.open(
+        {:spawn_executable, config.binary},
+        [:binary, :exit_status, :stderr_to_stdout, args: args]
+      )
+
+    collect_port_output(port, stream_fn, "", timeout)
+  end
+
+  defp collect_port_output(port, stream_fn, acc, timeout) do
+    receive do
+      {^port, {:data, data}} ->
+        {lines, remaining} = split_lines(acc <> data)
+        Enum.each(lines, stream_fn)
+        collect_port_output(port, stream_fn, remaining, timeout)
+
+      {^port, {:exit_status, code}} ->
+        if remaining_line?(acc), do: stream_fn.(acc)
+        {:ok, "", code}
+    after
+      timeout ->
+        Port.close(port)
+        {:error, :timeout}
+    end
+  end
+
+  defp split_lines(data) do
+    parts = String.split(data, "\n")
+    {Enum.slice(parts, 0..-2//1), List.last(parts)}
+  end
+
+  defp remaining_line?(buf), do: buf != ""
 
   @doc """
   Helper to add a flag to the arg list when a boolean is true.
