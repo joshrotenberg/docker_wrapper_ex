@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/joshrotenberg/docker_wrapper_ex/compare/v0.1.1...v0.1.2) (2026-04-09)
+
+
+### Features
+
+* integration tests, debug/retry executor, per-execution binary override ([#9](https://github.com/joshrotenberg/docker_wrapper_ex/issues/9)) ([eaf8399](https://github.com/joshrotenberg/docker_wrapper_ex/commit/eaf8399f5cdcafba103b94f0449e31029403c2e0))
+* stream callback option for any Docker command ([#11](https://github.com/joshrotenberg/docker_wrapper_ex/issues/11)) ([ec3da86](https://github.com/joshrotenberg/docker_wrapper_ex/commit/ec3da86638aca8b975412c1d1e9936b814d4272e)), closes [#6](https://github.com/joshrotenberg/docker_wrapper_ex/issues/6)
+
 ## [0.1.1](https://github.com/joshrotenberg/docker_wrapper_ex/compare/v0.1.0...v0.1.1) (2026-04-09)
 
 
