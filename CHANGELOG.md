@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/joshrotenberg/docker_wrapper_ex/compare/v0.1.0...v0.1.1) (2026-04-09)
+
+
+### Features
+
+* initial implementation -- typed Docker CLI wrapper for Elixir ([6fe3e6d](https://github.com/joshrotenberg/docker_wrapper_ex/commit/6fe3e6dfbfc8ad2fc68122de2ef693de15c3b95f))
+
 ## 0.1.0 (Unreleased)
 
 ### Features
