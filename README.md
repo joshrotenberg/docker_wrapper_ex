@@ -163,6 +163,35 @@ Docker.ps(config: config)
 
 Or set `DOCKER_PATH` to override the binary globally.
 
+### Leak-free execution with forcola (optional)
+
+By default, buffered commands run through `System.cmd/3`. On a timeout or when
+the BEAM dies, the Elixir task is torn down but the `docker` CLI OS process and
+any local grandchildren it spawned are not group-killed, so a hung `docker
+build` or `docker pull` can outlive `{:error, :timeout}`.
+
+The optional [`forcola`](https://hex.pm/packages/forcola) runner places each
+child in its own process group and group-kills it (SIGTERM then SIGKILL) on
+timeout or BEAM death. Add the dependency and select the runner:
+
+```elixir
+# mix.exs
+{:forcola, "~> 0.3"}
+
+# per-call
+config = Docker.Config.new(runner: :forcola)
+Docker.build(build_cmd, config: config)
+```
+
+forcola is POSIX-only and ships precompiled binaries, so no Rust toolchain is
+required. When it is not loaded (for example on Windows, or if the dependency is
+absent), the `:forcola` runner transparently falls back to `:system`.
+
+This governs the `docker` CLI process only. Container lifecycle still uses
+docker's own semantics (`docker run --rm`, `docker stop`, `docker kill`), which
+`Docker.Supervised` already handles. Streaming commands (`Docker.Stream`) and
+the streaming build callback continue to use a Port.
+
 ## Installation
 
 Add `docker_wrapper` to your dependencies in `mix.exs`:
