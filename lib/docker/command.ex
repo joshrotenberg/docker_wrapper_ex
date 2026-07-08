@@ -38,6 +38,12 @@ defmodule Docker.Command do
     * `[:docker_wrapper, :command, :stop]` -- after execution
 
   If the command exceeds the configured timeout, returns `{:error, :timeout}`.
+
+  Buffered commands (no `:stream`) honor the `Docker.Config` `:runner`. With the
+  default `:system` runner they execute via `System.cmd/3`. With the `:forcola`
+  runner they execute via `Forcola.run/2`, which group-kills the `docker` CLI
+  process on timeout or BEAM death; if forcola is not loaded the `:forcola`
+  runner falls back to `:system`. Streaming commands always use a Port.
   """
   @spec run(module(), struct(), Config.t(), keyword()) :: {:ok, term()} | {:error, term()}
   def run(mod, command, %Config{} = config, run_opts \\ []) do
@@ -73,6 +79,14 @@ defmodule Docker.Command do
   end
 
   defp run_with_cmd(config, args) do
+    if config.runner == :forcola and forcola_available?() do
+      run_with_forcola(config, args)
+    else
+      run_with_system_cmd(config, args)
+    end
+  end
+
+  defp run_with_system_cmd(config, args) do
     opts = Config.cmd_opts(config)
 
     task =
@@ -88,6 +102,31 @@ defmodule Docker.Command do
         {:error, :timeout}
     end
   end
+
+  defp run_with_forcola(config, args) do
+    case Forcola.run([config.binary | args], forcola_opts(config)) do
+      {:ok, %{status: exit_code, stdout: stdout}} when is_integer(exit_code) ->
+        {:ok, stdout, exit_code}
+
+      {:ok, %{status: {:signal, signal}}} ->
+        {:error, {:signal, signal}}
+
+      {:error, {:timeout, _partial}} ->
+        {:error, :timeout}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp forcola_opts(config) do
+    opts = [timeout_ms: config.timeout, merge_stderr: true]
+    opts = if config.working_dir, do: Keyword.put(opts, :cd, config.working_dir), else: opts
+
+    if config.env != [], do: Keyword.put(opts, :env, config.env), else: opts
+  end
+
+  defp forcola_available?, do: Code.ensure_loaded?(Forcola)
 
   defp run_with_port(config, args, stream_fn, timeout) do
     port =

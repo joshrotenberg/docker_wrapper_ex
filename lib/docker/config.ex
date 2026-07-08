@@ -8,15 +8,18 @@ defmodule Docker.Config do
 
   @default_timeout 30_000
 
+  @type runner :: :system | :forcola
+
   @type t :: %__MODULE__{
           binary: String.t(),
           working_dir: String.t() | nil,
           env: [{String.t(), String.t()}],
-          timeout: pos_integer()
+          timeout: pos_integer(),
+          runner: runner()
         }
 
   @enforce_keys [:binary]
-  defstruct [:binary, :working_dir, env: [], timeout: @default_timeout]
+  defstruct [:binary, :working_dir, env: [], timeout: @default_timeout, runner: :system]
 
   @doc """
   Creates a new `Docker.Config` struct.
@@ -27,6 +30,14 @@ defmodule Docker.Config do
     * `:working_dir` - working directory for commands (default: `nil`, uses current directory)
     * `:env` - list of `{key, value}` tuples for environment variables (default: `[]`)
     * `:timeout` - command timeout in milliseconds (default: `#{@default_timeout}`)
+    * `:runner` - execution backend, `:system` or `:forcola` (default: `:system`)
+
+  The `:forcola` runner routes buffered commands through the optional
+  [forcola](https://hex.pm/packages/forcola) library, which places each child
+  in its own process group and group-kills it (SIGTERM then SIGKILL) on timeout
+  or when the BEAM dies, preventing leaked `docker` CLI processes. It requires
+  the `:forcola` dependency and a POSIX platform; when forcola is not loaded the
+  runner transparently falls back to `:system`.
 
   ## Examples
 
@@ -38,6 +49,10 @@ defmodule Docker.Config do
       iex> config.timeout
       60_000
 
+      iex> config = Docker.Config.new(runner: :forcola)
+      iex> config.runner
+      :forcola
+
   """
   @spec new(keyword()) :: t()
   def new(opts \\ []) do
@@ -45,7 +60,8 @@ defmodule Docker.Config do
       binary: Keyword.get(opts, :binary, find_binary()),
       working_dir: Keyword.get(opts, :working_dir),
       env: Keyword.get(opts, :env, []),
-      timeout: Keyword.get(opts, :timeout, @default_timeout)
+      timeout: Keyword.get(opts, :timeout, @default_timeout),
+      runner: Keyword.get(opts, :runner, :system)
     }
   end
 
