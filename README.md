@@ -167,13 +167,15 @@ Or set `DOCKER_PATH` to override the binary globally.
 
 Add `docker_wrapper` to your dependencies in `mix.exs`:
 
+<!-- x-release-please-start-version -->
 ```elixir
 def deps do
   [
-    {:docker_wrapper, "~> 0.1"}
+    {:docker_wrapper, "~> 0.1.2"}
   ]
 end
 ```
+<!-- x-release-please-end -->
 
 ## License
 
