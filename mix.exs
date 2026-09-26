@@ -41,7 +41,7 @@ defmodule DockerWrapper.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
-      files: ~w(lib .formatter.exs mix.exs README.md LICENSE)
+      files: ~w(lib .formatter.exs mix.exs README.md LICENSE CHANGELOG.md)
     ]
   end
 
@@ -50,7 +50,7 @@ defmodule DockerWrapper.MixProject do
       main: "Docker",
       source_url: @source_url,
       source_ref: "v#{@version}",
-      extras: ["README.md", "LICENSE"],
+      extras: ["README.md", "CHANGELOG.md", "LICENSE"],
       groups_for_modules: [
         Core: [
           Docker,
